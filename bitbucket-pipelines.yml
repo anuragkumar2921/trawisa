@@ -1,0 +1,95 @@
+image: node:18.0.0
+clone:
+  depth: full 
+definitions:
+  services:
+    docker:
+      memory: 2048
+  caches:
+    sonar: ~/.sonar/cache # Caching SonarCloud artifacts will speed up your build
+  steps:
+    # - step: &Test-build
+    #     name: Build
+    #     caches:
+    #       - node
+    #       - sonar
+    #     # script:
+    #     # #   # - chmod +x ./cicd/scripts/initialScript.sh
+    #     # #   - pipe: sonarsource/sonarcloud-scan:1.4.0
+    #     # #     variables:
+    #     # #       SONAR_TOKEN: ${SONAR_TOKEN}
+    #     # #   - pipe: sonarsource/sonarcloud-quality-gate:0.1.6
+    #     # #     variables:
+    #     # #       SONAR_TOKEN: ${SONAR_TOKEN}
+    #     # # artifacts:
+    #     # #   - latest.zip
+    - step: &ecr-ecs-deploy
+        name: Prepare & Deploy
+        services:
+          - docker
+        caches:
+          - node
+          - docker
+        script:
+          - apt-get update
+          - apt-get install -y unzip
+          - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          - unzip awscliv2.zip
+          - apt-get install -y sudo
+          - sudo ./aws/install
+          # env variables
+          - echo "SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL" > .env
+          - echo "PORT=8080" >> .env
+          - echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> .env
+          - echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> .env
+          - echo "TRAWISA_JWT_REFRESH_TOKEN=$TRAWISA_JWT_REFRESH_TOKEN" >> .env
+          - echo "TRAWISA_JWT_SECRET_KEY=$TRAWISA_JWT_SECRET_KEY" >> .env
+          - echo "TRAWISA_AWS_ACCESS_KEY=$TRAWISA_AWS_ACCESS_KEY" >> .env
+          - echo "TRAWISA_AWS_SECRET_KEY=$TRAWISA_AWS_SECRET_KEY" >> .env
+          - echo "TRAWISA_AWS_REGION=$TRAWISA_AWS_REGION" >> .env
+          - echo "TRAWISA_AWS_BUCKET=$TRAWISA_AWS_BUCKET" >> .env
+      
+          # install dependencies and ecr push
+
+          # - npm install
+          - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $AWS_ECR_ID.dkr.ecr.eu-central-1.amazonaws.com
+          - docker build -t $REPO_NAME .
+          - docker tag $REPO_NAME:latest $AWS_ECR_ID.dkr.ecr.eu-central-1.amazonaws.com/$REPO_NAME:latest
+          - docker tag $REPO_NAME:latest $AWS_ECR_ID.dkr.ecr.eu-central-1.amazonaws.com/$REPO_NAME:$BITBUCKET_COMMIT
+          - docker push $AWS_ECR_ID.dkr.ecr.eu-central-1.amazonaws.com/$REPO_NAME
+          - aws ecs update-service --cluster $ECS_CLUSTER_NAME --service $ECS_SERVICE_NAME --force-new-deployment
+
+pipelines:
+  default:
+    - parallel:
+        - step:
+            name: 'MSTeamsNotification'
+            script:
+              - chmod +x ./tsnotification.sh
+              - ./tsnotification.sh
+    # - step:
+    #     <<: *Test-build
+    #     deployment: development-build
+
+  branches:
+    master:
+      # - step:
+      #     <<: *Test-build
+      #     deployment: development-build
+      - step:
+          <<: *ecr-ecs-deploy
+          deployment: development-codedeploy
+    staging:
+      # - step:
+      #     <<: *Test-build
+      #     deployment: staging-build
+      - step:
+          <<: *ecr-ecs-deploy
+          deployment: ECR-ECS-ENV
+    release/*:
+      # - step:
+      #     <<: *Test-build
+      #     deployment: production-build
+      - step:
+          <<: *ecr-ecs-deploy
+          deployment: ECR-ECS-ENV

@@ -1,0 +1,31 @@
+{
+  "message": {
+    "invalidUrl": "Sie haben eine ungültige URL eingegeben",
+    "accessDenied": "Zugriff verweigert",
+    "somethingWentWrong": "Etwas ist schief gelaufen",
+    "alreadyExist": "Existiert bereits",
+    "emailAlreadyExist": "Diese E-Mail existiert bereits",
+    "registrationSuccessful": "Benutzer erfolgreich registriert",
+    "loginBYErrorMsg": "loginBy-Schlüssel fehlt",
+    "emailEmpty": "E-Mail kann nicht sein ist leer",
+    "invalidEmail": "Ungültige E-Mail",
+    "passwordEmpty": "Das Passwort darf nicht leer sein",
+    "invalidPassword": "Invalid Password",
+    "invalidPasswordFormat": "Das Passwort muss 1 Großbuchstaben, 1 Zahl und 1 Symbol enthalten und eine Länge zwischen 8 und 16 haben.",
+    "socialIdTokenEmpty": "Social Id Token kann nicht leer sein",
+    "invalidLoginBy": "Ungültiges LoginBy",
+    "fcmEmptyError": "Firebase token required",
+    "socialTypeEmptyError": "Social type cannot be empty",
+    "invalidSocialType": "Social type can be google,apple,facebook",
+    "userNotFound": "User not found",
+    "otpSentSuccessfully": "Otp sent successfully",
+    "invalidRequest": "Invalid request body. Please check the request format and data.",
+    "otpLimitExceed": "You have exceeded the maximum number of attempts to send verification code, So, Please try after one hour.",
+    "loginSuccess": "Login Success",
+    "invalidCredentials": "Invalid Credentials",
+    "invalidOtp": "Invalid Otp",
+    "passwordChangedSuccess": "Password changed successfully",
+    "invalidUserNamePass": "Invalid Username password",
+    "notFound": "Not found De"
+  }
+}
